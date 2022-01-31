@@ -24,17 +24,14 @@ const app = initializeApp(firebaseConfig);
 
 const auth = getAuth();
 auth.languageCode = 'Ru';
-// window.onload = function () {
-//     render();
-// }
-//
-// function render() {
-//     window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {}, auth);
-//     recaptchaVerifier.render();
-//
-// }
+
+
 
 document.getElementById('send').onclick = () => {
+    let number = document.getElementById('number').value;
+    if(number === '' || !number){
+        return false;
+    }
     window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
         'size': 'invisible',
         'callback': (response) => {
@@ -42,37 +39,55 @@ document.getElementById('send').onclick = () => {
             onSignInSubmit();
         }
     }, auth);
-    const number = document.getElementById('number').value;
+    number = number.replace(/(\7|8)/,7);
     signInWithPhoneNumber(auth, `+${number}`, window.recaptchaVerifier).then((confirmationResult) => {
         window.confirmationResult = confirmationResult;
-        console.log(confirmationResult);
+
     }).catch((error)  => {
-        console.log(error);
+        grecaptcha.reset(window.recaptchaWidgetId);
+
     });
 }
 document.getElementById('sendDb').onclick = () => {
-
     const code = document.getElementById('verificationCode').value;
     const name = document.getElementById('name').value;
     const lastName = document.getElementById('lastName').value;
     const phone = document.getElementById('number').value;
     const email = document.getElementById('email').value;
+    const nameCompany = 'SAD';
+    const city = 'Kazan';
+    if(name === ''){
+        return false;
+    }
+    if(lastName === ''){
+        return false;
+    }
+    if(phone === ''){
+        return false;
+    }
+    if(city === ''){
+        return false;
+    }
+    if(nameCompany === ''){
+        return false;
+    }
     confirmationResult.confirm(code).then((result) => {
         const user = result.user;
-        console.log(user)
-        addMan(name, lastName, phone, email);
+        addMan(name, lastName, phone, email,city,nameCompany);
     }).catch((error) => {
-        console.log(error);
+
     });
 }
 
-function addMan(name, lastName, phone, email) {
+function addMan(name, lastName, phone, email, city,nameCompany) {
     const db = getDatabase(app);
     set(ref(db, '/' + Date.now()), {
-        name: name,
-        lastName: lastName,
-        phone: phone,
-        email: email,
+        'Имя': name,
+        'Фамилия': lastName,
+        'Номер телефона': phone,
+        'Почта': email,
+        'Город': city,
+        'Название компании': nameCompany,
     }).then(() => alert('user add'))
         .catch((error) => alert(error));
 }
